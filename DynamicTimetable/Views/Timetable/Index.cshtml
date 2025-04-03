@@ -1,0 +1,318 @@
+﻿
+@model TimetableRequest
+@{
+    ViewData["Title"] = "Dynamic Timetable Generator";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Timetable Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 12px;
+        }
+
+        .error-message1 {
+            color: red;
+            font-size: 12px;
+        }
+
+        .error-message2 {
+            color: red;
+            font-size: 12px;
+        }
+
+        .footer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Dynamic Timetable Generator</h2>
+        <input type="hidden" id="totalHoursHidden" value="0">
+        <div class="row w-50" id="UpperPart">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label>No. of Working Days (1-7):</label>
+                    <input type="number" id="workingDays" class="form-control">
+                    <span id="error-message" style="color:red; display:none;">Working Days should be between 1 to 7</span>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label>No. of Subjects per Day (Less than 9):</label>
+                    <input type="number" id="subjectsPerDay" class="form-control">
+                    <span id="error-message1" style="color:red; display:none;">No.of Subjects per day Must Be between 1 to 8</span>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label>Total Subjects:</label>
+                    <input type="number" id="totalSubjects" class="form-control">
+                    <span id="error-message2" style="color:red; display:none;">Total Subjects Should Be Only Positive Number</span>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label>Total Hours For Weeks:</label>
+                    <input type="number" id="TotalHoursForweek" readonly class="form-control">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <button class="btn btn-primary mr-2" type="button" id="CSubmit">Submit</button>
+            </div>
+        </div>
+        <div class="row" id="partialview">
+            <div class="col-12 mt-2">
+                <div id="subjectInputs"></div>
+            </div>
+            <div class="col-12 text-center mt-2">
+                <button id="generateButton" disabled class="btn btn-primary">Generate Timetable</button>  <button class="btn btn-outline-primary" id="cbACK">Back</button>
+            </div>
+            <div class="col-12 mt-2">
+                <table id="timetable" class="table table-bordered"></table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function () {
+        $("#totalSubjects").on("change", function () {
+            let totalSubjects = parseInt($(this).val()) || 0;
+            if (totalSubjects > 0) {
+                $("#generateButton").prop("disabled", false);
+                @*$("#subjectInputs").load("@Url.Action("_SubjectInputs", "Timetable")", { model: totalSubjects });*@
+            } else {
+                $("#subjectInputs").html("");
+                $("#generateButton").prop("disabled", true);
+            }
+        });
+
+        $("#workingDays").on("change", function () {
+            var workingDays = parseInt($(this).val()) || 0;
+            var subjectsPerDay = parseInt($("#subjectsPerDay").val()) || 0;
+            if (workingDays >= 1 && workingDays <= 7) {
+                var totalHoursForWeek = workingDays * subjectsPerDay;
+                $("#TotalHoursForweek").val(totalHoursForWeek);
+                $("#totalHoursHidden").val(totalHoursForWeek);
+            } else {
+                $("#TotalHoursForweek").val("");
+                $("#totalHoursHidden").val(0);
+            }
+        });
+
+        $("#subjectsPerDay").on("change", function () {
+            var subjectsPerDay = parseInt($(this).val()) || 0;
+            var workingDays = parseInt($("#workingDays").val()) || 0;
+
+            if (subjectsPerDay > 0 && subjectsPerDay < 9) {
+                var totalHoursForWeek = workingDays * subjectsPerDay;
+                $("#TotalHoursForweek").val(totalHoursForWeek);
+                $("#totalHoursHidden").val(totalHoursForWeek);
+            } else {
+                $("#TotalHoursForweek").val("");
+                $("#totalHoursHidden").val(0);
+            }
+        });
+
+
+        $(document).on("change", ".subjectName, .subjectHours", function () {
+            let index = $(this).data("index");
+            let isValid = true;
+            let errorMessage = "";
+
+            if ($(".subjectName").eq(index).val().trim() === "") {
+                isValid = false;
+                errorMessage = "Subject name cannot be empty.";
+                $("#subjectNameError-" + index).text(errorMessage);
+            } else {
+                $("#subjectNameError-" + index).text("");
+            }
+
+            let hours = parseInt($(".subjectHours").eq(index).val());
+            if (isNaN(hours) || hours < 1) {
+                isValid = false;
+                errorMessage = "Hours must be a positive number.";
+                $("#subjectHoursError-" + index).text(errorMessage);
+            } else {
+                $("#subjectHoursError-" + index).text("");
+            }
+
+            let allValid = true;
+            $(".subjectName, .subjectHours").each(function () {
+                let currentIndex = $(this).data("index");
+                if ($("#subjectNameError-" + currentIndex).text() || $("#subjectHoursError-" + currentIndex).text()) {
+                    allValid = false;
+                }
+            });
+
+            $("#generateButton").prop("disabled", !allValid);
+        });
+
+        $("#generateButton").on("click", function () {
+            let workingDays = parseInt($("#workingDays").val()) || 0;
+            let subjectsPerDay = parseInt($("#subjectsPerDay").val()) || 0;
+            let subjects = [];
+
+            $(".subjectName").each(function (index) {
+                let name = $(this).val().trim();
+                let hours = parseInt($(".subjectHours").eq(index).val()) || 0;
+
+                if (name && hours) {
+                    subjects.push({ SubjectName: name, Hours: hours });
+                }
+            });
+
+            $.ajax({
+                url: "/Timetable/GenerateTimetable",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    WorkingDays: workingDays,
+                    SubjectsPerDay: subjectsPerDay,
+                    Subjects: subjects
+                }),
+                beforeSend: function () {
+                    $("#generateButton").prop("disabled", true);
+                    $("#timetable").html("<p>Generating timetable... Please wait.</p>");
+                },
+                success: function (response) {
+                    if (!Array.isArray(response) || response.length === 0) {
+                        alert("Error: Invalid timetable data returned.");
+                        return;
+                    }
+
+                    let tableHtml = "<tr>";
+                    for (let i = 0; i < workingDays; i++) {
+                        tableHtml += "<th>Day " + (i + 1) + "</th>";
+                    }
+                    tableHtml += "</tr>";
+
+                    response.forEach(row => {
+                        tableHtml += "<tr>";
+                        row.forEach(cell => {
+                            tableHtml += `<td>${cell || "—"}</td>`;
+                        });
+                        tableHtml += "</tr>";
+                    });
+
+                    $("#timetable").html(tableHtml);
+                },
+                error: function () {
+                    alert("Error generating timetable. Please check inputs.");
+                },
+                complete: function () {
+                    $("#generateButton").prop("disabled", false);
+                }
+            });
+        });
+        //$("#CSubmit").click(function () {
+        //    $("#UpperPart").hide();
+        //    $("#CSubmit").hide();
+        //    $("#partialview").show();
+
+        //});
+
+        $("#cbACK").click(function () {
+            $("#UpperPart").show();
+            $("#CSubmit").show();
+            $("#partialview").hide();
+        });
+    });
+
+        $("#workingDays").keyup(function (e) {
+            var value = $(this).val();
+            if (value < 1 || value > 7) {
+                $("#error-message").show();
+            } else {
+                $("#error-message").hide();
+            }
+        });
+
+        $("#subjectsPerDay").keyup(function (e) {
+            var value = $(this).val();
+            if (value < 1 || value >= 9) {
+                $("#error-message1").show();
+            } else {
+                $("#error-message1").hide();
+            }
+        });
+
+        $("#totalSubjects").keyup(function (e) {
+            var value = $(this).val();
+            if (value < 0) {
+                $("#error-message2").show();
+            } else {
+                $("#error-message2").hide();
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+        $("#CSubmit").click(function () {
+            $("#UpperPart").hide();
+            $("#CSubmit").hide();
+            $("#partialview").show();
+    var workingDays = parseInt($("#workingDays").val()) || 0;
+    var subjectsPerDay = parseInt($("#subjectsPerDay").val()) || 0;
+    var totalSubjects = parseInt($("#totalSubjects").val()) || 0;
+            var TotalHoursForWeek = parseInt($("#TotalHoursForweek").val()) || 0;
+            $.ajax({
+                url: "/TimeTable/_SubjectInputs",
+                type: "POST",
+                data: {
+                    workingDays: workingDays,
+                    subjectsPerDay: subjectsPerDay,
+                    totalSubjects: totalSubjects,
+                    totalHoursForWeek: TotalHoursForWeek
+                },
+                success: function (response) {
+                    $("#UpperPart").hide();
+                    $("#CSubmit").hide();
+                    $("#partialview").show();
+                    $("#subjectInputs").html(response);
+                },
+                error: function (xhr, status, error) {
+                   $("#subjectInputs").html("");
+                    console.error("Error: " + error);
+                    alert("An error occurred while processing your request.");
+                }
+            });
+
+
+
+
+});
+
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+﻿@model TimetableRequest
+
+<div id="subjectInputs">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label>Total Hours For Weeks:</label>
+                <input type="number" readonly id="TotalHoursForweek2" style="pointer-events:none" class="form-control" value="@Model.TotalHoursForWeek">
+            </div>
+        </div>
+    </div>
+    @for (int i = 0; i < Model.TotalSubjects; i++)
+    {
+        <div class="subject-input-group">
+            <div class="row">
+              
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Subject Name:</label>
+                        <input type="text" class="subjectName form-control" data-index="@i" required>
+                        <span class="error-message" id="subjectNameError-@i"></span>
+                    </div>
+
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Hours:</label>
+                        <input type="number" class="subjectHours form-control" min="1" data-index="@i" required>
+                        <span class="error-message" id="subjectHoursError-@i"></span>
+                    </div>
+
+                </div>
+            </div>
+           <div class="row">
+               <div class="col-12">
+                   <hr />
+               </div>
+           </div>
+            
+           
+         
+        </div>
+    }
+</div>
+@* <script>
+$(document).ready(function () {
+    let totalHoursForWeek = parseInt($("#TotalHoursForweek2").val());
+
+    $(document).on("blur", ".subjectHours", function () {
+        let lastInput = $(".subjectHours").last();
+        if ($(this).is(lastInput)) {
+            let totalAllocatedHours = 0;
+
+            $(".subjectHours").each(function () {
+                totalAllocatedHours += parseInt($(this).val()) || 0;
+            });
+
+            if (totalAllocatedHours !== totalHoursForWeek) {
+                alert("Total subject hours must be exactly " + totalHoursForWeek + ".");
+                $(this).focus();
+            }
+        }
+    });
+});
+</script>
+ *@

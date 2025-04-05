@@ -243,6 +243,8 @@
             var value = $(this).val();
             if (value < 1 || value > 7) {
                 $("#error-message").show();
+                $(this).val('');
+
             } else {
                 $("#error-message").hide();
             }
@@ -252,6 +254,8 @@
             var value = $(this).val();
             if (value < 1 || value >= 9) {
                 $("#error-message1").show();
+                $(this).val('');
+
             } else {
                 $("#error-message1").hide();
             }
@@ -261,6 +265,8 @@
             var value = $(this).val();
             if (value < 0) {
                 $("#error-message2").show();
+                $(this).val('');
+
             } else {
                 $("#error-message2").hide();
             }
@@ -275,15 +281,35 @@
 
 
 
-
+//////////////////
         $("#CSubmit").click(function () {
+            var workingDays = parseInt($("#workingDays").val()) || 0;
+            var subjectsPerDay = parseInt($("#subjectsPerDay").val()) || 0;
+            var totalSubjects = parseInt($("#totalSubjects").val()) || 0;
+            var TotalHoursForWeek = parseInt($("#TotalHoursForweek").val()) || 0;
+
+            if (workingDays <= 0 || workingDays > 7) {
+                alert("Please enter a valid number of working days (1-7).");
+                return;
+            }
+
+            if (subjectsPerDay <= 0 || subjectsPerDay >= 9) {
+                alert("Please enter a valid number of subjects per day (1-8).");
+                return;
+            }
+
+            if (totalSubjects <= 0) {
+                alert("Please enter a valid number of total subjects (greater than 0).");
+                return;
+            }
+
+            if (TotalHoursForWeek <= 0) {
+                alert("Total hours for the week must be a positive number.");
+                return;
+            }
             $("#UpperPart").hide();
             $("#CSubmit").hide();
             $("#partialview").show();
-    var workingDays = parseInt($("#workingDays").val()) || 0;
-    var subjectsPerDay = parseInt($("#subjectsPerDay").val()) || 0;
-    var totalSubjects = parseInt($("#totalSubjects").val()) || 0;
-            var TotalHoursForWeek = parseInt($("#TotalHoursForweek").val()) || 0;
             $.ajax({
                 url: "/TimeTable/_SubjectInputs",
                 type: "POST",
@@ -300,7 +326,7 @@
                     $("#subjectInputs").html(response);
                 },
                 error: function (xhr, status, error) {
-                   $("#subjectInputs").html("");
+                    $("#subjectInputs").html("");
                     console.error("Error: " + error);
                     alert("An error occurred while processing your request.");
                 }
@@ -309,7 +335,7 @@
 
 
 
-});
+        });
 
 
     </script>
